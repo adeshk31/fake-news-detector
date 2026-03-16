@@ -167,6 +167,13 @@ st.markdown("""
     .verdict-fake::before {
         background: linear-gradient(90deg, #f56565, #e53e3e);
     }
+    .verdict-uncertain {
+        background: linear-gradient(135deg, rgba(236, 201, 75, 0.08) 0%, rgba(214, 158, 46, 0.04) 100%);
+        border: 1px solid rgba(236, 201, 75, 0.2);
+    }
+    .verdict-uncertain::before {
+        background: linear-gradient(90deg, #ecc94b, #d69e2e);
+    }
 
     .verdict-icon {
         font-size: 2.5rem;
@@ -181,6 +188,7 @@ st.markdown("""
     }
     .verdict-real .verdict-label { color: #68d391; }
     .verdict-fake .verdict-label { color: #fc8181; }
+    .verdict-uncertain .verdict-label { color: #ecc94b; }
 
     .verdict-title {
         font-size: 1.6rem;
@@ -188,6 +196,7 @@ st.markdown("""
     }
     .verdict-real .verdict-title { color: #48bb78; }
     .verdict-fake .verdict-title { color: #f56565; }
+    .verdict-uncertain .verdict-title { color: #ecc94b; }
 
     .verdict-note {
         font-size: 0.85rem;
@@ -542,6 +551,8 @@ def get_top_words(vector, vectorizer, n=10):
 
 # Domain Credibility Database
 SOURCE_CREDIBILITY = {
+    # ── Highly Credible ─────────────────────────────────────
+    # International wire services & newspapers of record
     "bbc.com": ("Highly Credible", "high"),
     "bbc.co.uk": ("Highly Credible", "high"),
     "reuters.com": ("Highly Credible", "high"),
@@ -549,12 +560,51 @@ SOURCE_CREDIBILITY = {
     "nytimes.com": ("Highly Credible", "high"),
     "theguardian.com": ("Highly Credible", "high"),
     "washingtonpost.com": ("Highly Credible", "high"),
+    "aljazeera.com": ("Highly Credible", "high"),
+    "dw.com": ("Highly Credible", "high"),
+    "france24.com": ("Highly Credible", "high"),
+    "abc.net.au": ("Highly Credible", "high"),
+    "economist.com": ("Highly Credible", "high"),
+    "bloomberg.com": ("Highly Credible", "high"),
+    # Indian newspapers of record
     "thehindu.com": ("Highly Credible", "high"),
     "indianexpress.com": ("Highly Credible", "high"),
-    "timesofindia.com": ("Generally Reliable", "medium"),
+    "livemint.com": ("Highly Credible", "high"),
+    "deccanherald.com": ("Highly Credible", "high"),
+    "scroll.in": ("Highly Credible", "high"),
+    "theprint.in": ("Highly Credible", "high"),
+    # ── Generally Reliable ─────────────────────────────────
+    # Major TV networks & large-circulation dailies
     "ndtv.com": ("Generally Reliable", "medium"),
-    "cnn.com": ("Generally Reliable", "medium"),
+    "timesofindia.com": ("Generally Reliable", "medium"),
+    "indiatimes.com": ("Generally Reliable", "medium"),
     "hindustantimes.com": ("Generally Reliable", "medium"),
+    "cnn.com": ("Generally Reliable", "medium"),
+    "cbsnews.com": ("Generally Reliable", "medium"),
+    "nbcnews.com": ("Generally Reliable", "medium"),
+    "usatoday.com": ("Generally Reliable", "medium"),
+    "forbes.com": ("Generally Reliable", "medium"),
+    "news18.com": ("Generally Reliable", "medium"),
+    "firstpost.com": ("Generally Reliable", "medium"),
+    "zeenews.india.com": ("Generally Reliable", "medium"),
+    "moneycontrol.com": ("Generally Reliable", "medium"),
+    "business-standard.com": ("Generally Reliable", "medium"),
+    "theeconomictimes.com": ("Generally Reliable", "medium"),
+    "tribuneindia.com": ("Generally Reliable", "medium"),
+    "thestatesman.com": ("Generally Reliable", "medium"),
+    "telegraphindia.com": ("Generally Reliable", "medium"),
+    "aajtak.in": ("Generally Reliable", "medium"),
+    "abplive.com": ("Generally Reliable", "medium"),
+    # Sports-specific credible sources
+    "espncricinfo.com": ("Generally Reliable", "medium"),
+    "espn.com": ("Generally Reliable", "medium"),
+    "cricbuzz.com": ("Generally Reliable", "medium"),
+    "icc-cricket.com": ("Highly Credible", "high"),
+    "bcci.tv": ("Highly Credible", "high"),
+    "skysports.com": ("Generally Reliable", "medium"),
+    "goal.com": ("Generally Reliable", "medium"),
+    "sportstar.thehindu.com": ("Generally Reliable", "medium"),
+    # ── Low Credibility ────────────────────────────────────
     "opindia.com": ("Low Credibility", "low"),
     "breitbart.com": ("Low Credibility", "low"),
 }
@@ -687,13 +737,23 @@ if analyze_btn:
         verdict_class = "fake"
         verdict_icon = "🚨"
     else:
-        final_verdict = f"Likely {prediction}"
-        final_note = (
-            "Assessment based on AI content analysis. "
-            "Source credibility is unknown."
-        )
-        verdict_class = "real" if prediction == "REAL" else "fake"
-        verdict_icon = "✅" if prediction == "REAL" else "🚨"
+        # For unknown sources, use confidence threshold to avoid false verdicts
+        if confidence < 70:
+            final_verdict = "Uncertain"
+            final_note = (
+                "ML confidence is low and the source is not in our credibility "
+                "database. Please verify this article through multiple trusted sources."
+            )
+            verdict_class = "uncertain"
+            verdict_icon = "⚠️"
+        else:
+            final_verdict = f"Likely {prediction}"
+            final_note = (
+                "Assessment based on AI content analysis. "
+                "Source credibility is unknown."
+            )
+            verdict_class = "real" if prediction == "REAL" else "fake"
+            verdict_icon = "✅" if prediction == "REAL" else "🚨"
 
     # ── RESULTS UI ────────────────────────────────────────
     st.markdown("<br>", unsafe_allow_html=True)
