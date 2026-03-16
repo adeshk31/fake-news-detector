@@ -1,0 +1,8 @@
+streamlit
+scikit-learn
+pandas
+nltk
+newspaper3k
+beautifulsoup4
+requests
+lxml
