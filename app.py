@@ -92,6 +92,7 @@ st.markdown("""
         margin: 0 auto;
         line-height: 1.6;
         font-weight: 400;
+        text-align: center;
     }
 
     /* ===== GLASS CARD ===== */
@@ -425,7 +426,7 @@ st.markdown("""
         background: rgba(255, 255, 255, 0.04) !important;
         border: 1px solid rgba(255, 255, 255, 0.08) !important;
         border-radius: 12px !important;
-        color: #e2e8f0 !important;
+        color: #63b3ed !important;
         font-family: 'Inter', sans-serif !important;
         font-size: 0.9rem !important;
         transition: all 0.2s ease !important;
