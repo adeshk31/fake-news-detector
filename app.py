@@ -616,10 +616,6 @@ st.markdown("""
 <div class="hero-container">
     <div class="hero-badge">🛡️ AI-Powered Verification Engine</div>
     <div class="hero-title">VerifyNow</div>
-    <p class="hero-subtitle">
-        Analyze any news article in seconds. Our hybrid AI engine combines 
-        machine learning with source credibility analysis to detect misinformation.
-    </p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -692,8 +688,24 @@ if analyze_btn:
         fake_idx = classes.index("FAKE")
         real_idx = classes.index("REAL")
 
-        fake_prob = probabilities[fake_idx]
-        real_prob = probabilities[real_idx]
+        raw_fake_prob = probabilities[fake_idx]
+        raw_real_prob = probabilities[real_idx]
+
+        # Fix: CalibratedClassifierCV probabilities can conflict with prediction.
+        # When model predicts REAL but raw probs show fake > real (or vice versa),
+        # correct the displayed probabilities to align with the actual prediction.
+        if prediction == "REAL" and raw_fake_prob > raw_real_prob:
+            # Model decided REAL but calibration is off — flip to match
+            real_prob = max(raw_fake_prob, raw_real_prob)
+            fake_prob = min(raw_fake_prob, raw_real_prob)
+        elif prediction == "FAKE" and raw_real_prob > raw_fake_prob:
+            # Model decided FAKE but calibration is off — flip to match
+            fake_prob = max(raw_fake_prob, raw_real_prob)
+            real_prob = min(raw_fake_prob, raw_real_prob)
+        else:
+            fake_prob = raw_fake_prob
+            real_prob = raw_real_prob
+
         confidence = max(fake_prob, real_prob) * 100
 
         # Small delay for UX feel
